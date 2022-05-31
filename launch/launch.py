@@ -7,7 +7,7 @@ def generate_launch_description():
 
     ld = launch.LaunchDescription()
 
-    pkg_name = "fake_lidar_pub"
+    pkg_name = "fake_lidar_publisher"
     pkg_share_path = get_package_share_directory(pkg_name)
  
     ld.add_action(launch.actions.DeclareLaunchArgument("use_sim_time", default_value="false"))
@@ -17,9 +17,9 @@ def generate_launch_description():
     namespace=DRONE_DEVICE_ID
     ld.add_action(
         Node(
-            package='fake_lidar_pub',
+            package=pkg_name,
             executable='talker',
-            name='fake_lidar_pub',
+            name='fake_lidar_publisher',
             remappings=[
                 ('topic', DRONE_DEVICE_ID + '/rplidar/scan'),
             ],

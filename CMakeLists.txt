@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(fake_lidar_pub)
+project(fake_lidar_publisher)
 
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
@@ -27,12 +27,8 @@ ament_target_dependencies(talker rclcpp sensor_msgs)
 ## --------------------------------------------------------------
 
 install(
-  TARGETS
-  talker
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
+  TARGETS talker
+  DESTINATION lib/${PROJECT_NAME}
   )
 
 install(DIRECTORY launch

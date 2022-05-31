@@ -8,35 +8,38 @@
 
 using namespace std::chrono_literals;
 
-  template <class T>
-  bool parse_param(const std::string &param_name, T &param_dest, rclcpp::Node& node)
+template <class T>
+bool parse_param(const std::string &param_name, T &param_dest, rclcpp::Node& node)
+{
+  node.declare_parameter<T>(param_name); 
+  if (!node.get_parameter(param_name, param_dest))
   {
-    node.declare_parameter<T>(param_name); // for Galactic and newer
-    if (!node.get_parameter(param_name, param_dest))
-    {
-      RCLCPP_ERROR(node.get_logger(), "Could not load param '%s'", param_name.c_str());
-      return false;
-    }
-    else
-    {
-      RCLCPP_INFO_STREAM(node.get_logger(), "Loaded '" << param_name << "' = '" << param_dest << "'");
-    }
-    return true;
+    RCLCPP_ERROR(node.get_logger(), "Could not load param '%s'", param_name.c_str());
+    return false;
   }
+  else
+  {
+    RCLCPP_INFO_STREAM(node.get_logger(), "Loaded '" << param_name << "' = '" << param_dest << "'");
+  }
+  return true;
+}
 
-class FakeLikarPublisher : public rclcpp::Node
+class FakeLidarPublisher : public rclcpp::Node
 {
 public:
-  FakeLikarPublisher()
+  FakeLidarPublisher()
   : Node("fake_lidar_publisher")
   {
     publisher_ = this->create_publisher<sensor_msgs::msg::LaserScan>("topic", 10);
 
     RCLCPP_INFO(get_logger(), "-------------- Loading parameters --------------");
     bool loaded_successfully = true;
-    loaded_successfully &= parse_param("rate", rate_, *this);
-    loaded_successfully &= parse_param("blocking_distance", blocking_distance_, *this);
-    loaded_successfully &= parse_param("frame_id", frame_id_, *this);
+    std::string frame_id;
+    double rate;
+    double blocking_distance;
+    loaded_successfully &= parse_param("rate", rate, *this);
+    loaded_successfully &= parse_param("blocking_distance", blocking_distance, *this);
+    loaded_successfully &= parse_param("frame_id", frame_id, *this);
 
     // Check if all parameters were loaded correctly
     if (!loaded_successfully) {
@@ -46,38 +49,41 @@ public:
       return;
     }
 
+    RCLCPP_INFO(get_logger(), "-------------- Parameters loaded --------------");
+
+    message_ = sensor_msgs::msg::LaserScan();
+    message_.header.frame_id = frame_id;
+    message_.angle_min = -3.1241400241851807;
+    message_.angle_max = 3.1241400241851807;
+    message_.angle_increment = 0.008690236136317253;
+    message_.time_increment = 0.0;
+    message_.scan_time = 0.0;
+    message_.range_min = 0.15000000596046448;
+    message_.range_max = 14.0;
+
+    const int number_of_elements = int((message_.angle_max - message_.angle_min) / message_.angle_increment);
+
+    for (int it = 0; it < number_of_elements ; it++) {
+      message_.ranges.push_back(blocking_distance);
+    }
+
     timer_ = this->create_wall_timer(
-        std::chrono::duration<double>(1.0 / rate_), std::bind(&FakeLikarPublisher::timer_callback, this));
+        std::chrono::duration<double>(1.0 / rate), std::bind(&FakeLidarPublisher::timer_callback, this));
   }
 
 private:
   void timer_callback()
   {
-    auto message = sensor_msgs::msg::LaserScan();
-    message.header.stamp = this->get_clock()->now();
-    message.header.frame_id = frame_id_;
-    message.angle_min = -3.1241400241851807;
-    message.angle_max = 3.1241400241851807;
-    message.angle_increment = 0.008690236136317253;
-    message.time_increment = 0.0;
-    message.scan_time = 0.0;
-    message.range_min = 0.15000000596046448;
-    message.range_max = 14.0;
+    RCLCPP_INFO_ONCE(this->get_logger(), "Publishing data !!!");
 
-    const int number_of_elements = int((message.angle_max - message.angle_min) / message.angle_increment);
+    message_.header.stamp = this->get_clock()->now();
 
-    for (int it = 0; it < number_of_elements ; it++) {
-      message.ranges.push_back(blocking_distance_);
-    }
-
-    RCLCPP_INFO_ONCE(this->get_logger(), "Publishing data");
-    publisher_->publish(message);
+    publisher_->publish(message_);
   }
+
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher_;
-  std::string frame_id_;
-  double rate_;
-  double blocking_distance_;
+  sensor_msgs::msg::LaserScan message_;
 };
 
 
@@ -85,7 +91,7 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<FakeLikarPublisher>());
+  rclcpp::spin(std::make_shared<FakeLidarPublisher>());
   rclcpp::shutdown();
   return 0;
 }
