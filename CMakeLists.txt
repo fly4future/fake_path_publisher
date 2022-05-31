@@ -35,8 +35,4 @@ install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
   )
 
-install(TARGETS talker
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
 ament_package()
