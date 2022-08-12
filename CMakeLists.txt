@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(fake_lidar_publisher)
+project(fake_path_publisher)
 
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
@@ -14,17 +14,23 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(fognav_msgs REQUIRED)
+find_package(px4_msgs REQUIRED)
 
 ## --------------------------------------------------------------
 ## |                            build                           |
 ## --------------------------------------------------------------
 
-add_executable(talker src/fake_lidar_pub.cpp)
-ament_target_dependencies(talker rclcpp sensor_msgs)
+add_executable(talker src/fake_path_pub.cpp)
+ament_target_dependencies(talker rclcpp sensor_msgs fognav_msgs px4_msgs)
 
 ## --------------------------------------------------------------
 ## |                           install                          |
 ## --------------------------------------------------------------
+
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
+  )
 
 install(
   TARGETS talker

@@ -7,7 +7,7 @@ def generate_launch_description():
 
     ld = launch.LaunchDescription()
 
-    pkg_name = "fake_lidar_publisher"
+    pkg_name = "fake_path_publisher"
     pkg_share_path = get_package_share_directory(pkg_name)
  
     ld.add_action(launch.actions.DeclareLaunchArgument("use_sim_time", default_value="false"))
@@ -19,16 +19,17 @@ def generate_launch_description():
         Node(
             package=pkg_name,
             executable='talker',
-            name='fake_lidar_publisher',
+            name='fake_path_publisher',
             remappings=[
-                ('topic', DRONE_DEVICE_ID + '/rplidar/scan'),
+                ('path_out', "/" + DRONE_DEVICE_ID + "/other_drone_plan"),
+                ('trajectory_out', "/fleet/trajectory/in"),
+                ('home_pos_in', "/" + DRONE_DEVICE_ID + "/fmu/home_position/out"),
             ],
             output='screen',
             parameters=[
+                pkg_share_path + '/config/default.yaml',
                 {"use_sim_time": launch.substitutions.LaunchConfiguration("use_sim_time")},
-                {"frame_id": DRONE_DEVICE_ID + '/rplidar'},
-                {"rate": 100.0},
-                {"blocking_distance": 3.0},
+                {"geographic_global_frame": DRONE_DEVICE_ID+"/geo"}
             ],
         ),
     )

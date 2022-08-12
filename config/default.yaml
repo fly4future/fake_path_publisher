@@ -1,0 +1,9 @@
+fake_path_publisher:
+  ros__parameters:
+    rate: 5.0
+    speed: 0.2
+    height: 3.0
+    duration: 50.0
+    pub_type: 1 # 0 - publish processed path, 1 - publish path in common origin
+    drone_name: "drone00"
+
